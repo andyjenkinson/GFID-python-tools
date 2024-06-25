@@ -1,0 +1,21 @@
+{
+  "id":"2220ea5f-3864-4a2b-863e-567bc2c229af",
+  "type":"Feature",
+  "properties":{
+    "area":{
+      "value":102486.410777,
+      "unit":"m2"
+    },
+    "perimeter":{
+      "value":1915.261827,
+      "unit":"m"
+    }
+  },
+  "geometry":{
+    "type":"Point",
+    "coordinates":[
+      0.9451157051904887,
+      48.77050945785851
+    ]
+  }
+}

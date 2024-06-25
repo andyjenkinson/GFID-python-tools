@@ -1,0 +1,3 @@
+token_url: https://auth.varda.ag/oauth/token
+client_id: ABC
+client_secret: XYZ
