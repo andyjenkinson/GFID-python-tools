@@ -60,10 +60,7 @@ class APIClient(object):
                 
 
     def field_search(self, payload={}, limit=5, offset=None):
-        url = self.config.base_url
-        if not url.endswith("/"):
-            url += "/"
-        url += "field-searches"
+        url = self.base_url() + "field-searches"
 
         querystring = {"limit":limit}
 
@@ -76,10 +73,7 @@ class APIClient(object):
         return response
 
     def get_boundaries(self, args={}, limit=5, offset=None):
-        url = self.config.base_url
-        if not url.endswith("/"):
-            url += "/"
-        url += "boundaries"
+        url = self.base_url() + "boundaries"
 
         args['limit'] = limit
         if offset:
@@ -93,6 +87,62 @@ class APIClient(object):
 
         return response
 
+    def get_boundary(self, boundary_id):
+        if not boundary_id:
+            raise ValueError("Boundary ID is required")
+        url = self.base_url() + "boundaries/" + boundary_id
+
+        headers = {
+            "Accept": "application/geo+json",
+        }
+
+        response = self._request(method="GET", url=url, body=None, headers=headers)
+
+        return response
+    
+    def get_boundary_references(self, args={}, limit=5, offset=None):
+        url = self.base_url() + "boundary-references"
+
+        args['limit'] = limit
+        if offset:
+            args['offset'] = offset
+
+        headers = {
+            "Accept": "application/geo+json",
+        }
+
+        response = self._request(method="GET", url=url, body=None, headers=headers, params=args)
+
+        return response
+
+    def get_boundary_reference(self, boundary_reference_id):
+        if not boundary_reference_id:
+            raise ValueError("Boundary Reference ID is required")
+        url = self.base_url() + "boundary-references/" + boundary_reference_id
+
+        headers = {
+            "Accept": "application/geo+json",
+        }
+
+        response = self._request(method="GET", url=url, body=None, headers=headers)
+
+        return response
+
+    def register_boundaries(self, payload={}, dry_run=False):
+        url = self.base_url() + "boundaries"
+
+        args = {}
+        if dry_run:
+            args['dry_run'] = 'true'
+
+        headers = {
+            "Accept": "application/geo+json, application/json"
+        }
+
+        response = self._request(method="POST", url=url, body=payload, headers=headers, params=args)
+
+        return response
+
     def access_token(self):
         
         # Refresh token if necessary
@@ -100,7 +150,7 @@ class APIClient(object):
             return self._access_token
 
         # Refresh token 
-        payload = "grant_type=client_credentials&client_id={}&client_secret={}&audience={}".format(self.config.client_id, self.config.client_secret, "https://api.varda.ag/fid/")
+        payload = "grant_type=client_credentials&client_id={}&client_secret={}&audience={}".format(self.config.client_id, self.config.client_secret, self.config.audience)
 
         headers = { 'Content-Type': "application/x-www-form-urlencoded" }
 
@@ -123,28 +173,50 @@ class APIClient(object):
 
         return self._access_token
 
+    def base_url(self):
+        url = self.config.base_url
+        if not url.endswith("/"):
+            url += "/"
+        return url
+
 class APIConfiguration(object):
 
-    def __init__(self):
-        # Default Base url
-        self.base_url = "https://api.varda.ag/fid/v1/"
+    def __init__(self,
+                 base_url="https://api.varda.ag/fid/v1/",       # Default Base url
+                 audience="https://api.varda.ag/fid/",          # Default API audience
+                 token_url="https://auth.varda.ag/oauth/token", # Auth config
+                 client_id="",           # OAuth credentials
+                 client_secret="",       # OAuth credentials
+                 token_expiry_buffer=10, # Buffer (in seconds) used to refresh token before it expires
+                 timeout=10,             # Client-side request timeout
+                 tls_verify=True,        # Set to false to skip TLS cert verification.
+                 tls_ca_cert=None        # Set to customize the CA certificate for server certificate verification.
+                 ):
 
-        # OAuth credentials
-        self.client_id = ""
-        self.client_secret = ""
+        self.base_url = base_url
+        self.audience = audience
+        self.token_url = token_url
+        self.client_id = client_id
+        self.client_secret = client_secret
+        self.token_expiry_buffer = token_expiry_buffer
+        self.timeout = timeout
+        self.tls_verify = tls_verify
+        self.tls_ca_cert = tls_ca_cert
 
-        # Auth config
-        self.token_url="https://auth.varda.ag/oauth/token"
-        # Buffer (in seconds) used to refresh token before it expires
-        self.token_expiry_buffer = 10
+    def from_dict(conf):
+        c = APIConfiguration()
 
-        # Client-side request timeout
-        self.timeout = 10
+        required = ['base_url', 'audience', 'token_url', 'client_id', 'client_secret', 'token_expiry_buffer', 'timeout']
 
-        # Set to false to skip TLS cert verification.
-        self.tls_verify = True
-        # Set to customize the CA certificate for server certificate verification.
-        self.tls_ca_cert = None
+        for key in conf:
+            setattr(c, key, conf[key])
+
+        for key in required:
+            if not getattr(c, key):
+                raise ValueError(key+" is required in configuration")
+            
+        return c
+
 
 class APIException(Exception):
 
