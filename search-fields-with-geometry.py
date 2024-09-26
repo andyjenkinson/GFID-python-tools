@@ -22,11 +22,7 @@ def main(argv):
     conf = read_yaml(config_fn)
     input_json = read_json(input_fn)
    
-    api_config = APIConfiguration()
-    api_config.client_id = conf['client_id']
-    api_config.client_secret = conf['client_secret']
-    if 'token_url' in conf:
-        api_config.token_url = conf['token_url']
+    api_config = APIConfiguration.from_dict(conf)
 
     api_client = APIClient(config=api_config)
     response = api_client.field_search(payload=input_json)

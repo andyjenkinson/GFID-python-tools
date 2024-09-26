@@ -33,11 +33,7 @@ def main(argv):
     if output_fn:
         output_fh = open(output_fn, 'w')
    
-    api_config = APIConfiguration()
-    api_config.client_id = conf['client_id']
-    api_config.client_secret = conf['client_secret']
-    if 'token_url' in conf:
-        api_config.token_url = conf['token_url']
+    api_config = APIConfiguration.from_dict(conf)
 
     query_params = {
         'field_relationships.field_id': gfid_string,
