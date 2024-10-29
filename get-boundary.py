@@ -39,6 +39,8 @@ def main(argv):
     results = []
     for gbid in gbids:
         response = api_client.get_boundary(boundary_id=gbid)
+        print(response.status_code)
+        response.raise_for_status
         result = response.json()
 
         for ref in result['properties']['boundary_references']:
